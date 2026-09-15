@@ -1,5 +1,12 @@
 # Implantação — EasyPanel (Fase 1)
 
+> **Deploy via painel EasyPanel.io (self-hosted, numa VPS):** ver
+> [TUTORIAL.md](../TUTORIAL.md), seção 8 — usa
+> `deploy/docker-compose.easypanel.yml` (sem Caddy; o painel roda seu próprio
+> proxy reverso) e é o caminho recomendado quando a VPS já tem o painel
+> instalado. Esta página (`docs/DEPLOYMENT.md`) documenta o caminho genérico
+> com Docker Compose + Caddy próprio, para quem não usa esse painel.
+
 ## Componentes (Docker Compose)
 
 O arquivo `deploy/docker-compose.yml` provisiona: `api`, `frontend`, `postgres`,

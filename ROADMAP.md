@@ -18,7 +18,7 @@ como TODO por não serem "primeiro uso real".
 | Fase | Tema | Por quê agora |
 |------|------|----------------|
 | 11 | CI/CD no GitHub | Sem isso, cada mudança depende de rodar tudo manualmente — risco alto de regressão silenciosa assim que mais de uma pessoa/sessão mexer no código |
-| 12 | Deploy real (staging) | Provar que `deploy/docker-compose*.yml` funciona de ponta a ponta fora da máquina de desenvolvimento |
+| 12 | Deploy real (staging) | Provar que a stack funciona fora da máquina de desenvolvimento — **em andamento**: compose para o painel EasyPanel.io na VPS do usuário já preparado (ver TUTORIAL.md §8) |
 | 13 | Observabilidade operacional | Sem dashboards/alertas reais, um incidente em produção não seria percebido a tempo |
 | 14 | Hardening de segurança | Fechar os dois TODOs de escala sinalizados desde a Fase 1 (rate limiting e RBAC em Redis) antes de expor a internet |
 | 15 | Frontend (SPA) | A API está pronta, mas ninguém consegue *usar* o produto sem interface |
@@ -53,26 +53,33 @@ workflows e mostra status verde/vermelho corretamente no GitHub.
 
 ## Fase 12 — Deploy real (staging)
 
-**Objetivo:** rodar a stack completa (`docker-compose.yml` +
-`docker-compose.staging.yml`) num host real (VM/cloud), não só na máquina de
-desenvolvimento, provando que a Fase 1 (Docker Compose, Caddy, Postgres,
+**Objetivo:** rodar a stack completa num host real (VM/cloud), não só na
+máquina de desenvolvimento, provando que a Fase 1 (Docker Compose, Postgres,
 Redis, MinIO) funciona fora do papel.
 
-**Escopo:**
-- Provisionar um host (VM cloud econômica é suficiente para staging).
-- `deploy/.env` real com segredos gerados (nunca reaproveitar os de
-  desenvolvimento) — `JWT_SIGNING_KEY`, credenciais de Postgres/MinIO/Redis,
-  `SITE_ADDRESS`/`ACME_EMAIL` para TLS automático do Caddy.
-- Subir a stack, confirmar `GET /health/ready`, aplicar o Bootstrap
-  (`SuperAdminEmail`/`SuperAdminPassword`) para criar o primeiro acesso.
-- Runbook de deploy (documentar os passos reais executados, não só o
-  teórico já em `docs/DEPLOYMENT.md`) e runbook de rollback.
-- **CD automático** (fecha o que a Fase 11 deixou pendente): workflow que,
-  após os testes passarem na `main`, builda as imagens Docker e faz deploy
-  no host de staging via SSH/registry.
+**Status parcial já entregue** (fora do fluxo gated, a pedido do usuário):
+deploy através do painel self-hosted **EasyPanel.io**, já instalado na VPS
+do usuário. `deploy/docker-compose.easypanel.yml` (variação de
+`docker-compose.yml` sem `caddy` e sem portas publicadas — o painel já roda
+seu próprio Traefik em 80/443) e o passo a passo completo em
+[TUTORIAL.md](TUTORIAL.md), seção 8. **Falta:** confirmar o deploy real feito
+pelo usuário no painel (não executado por esta sessão — sem acesso à VPS) e
+formalizar o webhook de auto-deploy a cada push.
 
-**Critério de pronto:** a API responde publicamente em staging, com TLS
-válido, e um push na `main` chega automaticamente ao ambiente em minutos.
+**Escopo restante:**
+- Confirmar com o usuário que o deploy via painel funcionou de ponta a ponta
+  (health check público, primeiro tenant criado).
+- Cadastrar a Deployment Trigger URL do painel como webhook do GitHub
+  (fecha o ciclo push → CI verde → deploy automático).
+- Runbook de rollback (o painel provavelmente já cobre parte disso — validar
+  o fluxo nativo antes de documentar um procedimento paralelo).
+- Alternativa sem painel (`docker-compose.yml` + `docker-compose.staging.yml`
+  + Caddy) permanece documentada em `docs/DEPLOYMENT.md`/`TUTORIAL.md` seção
+  9, para quem não usa o EasyPanel.io.
+
+**Critério de pronto:** a API responde publicamente (via painel ou via
+Caddy próprio) com TLS válido, e um push na `main` chega automaticamente ao
+ambiente em minutos.
 
 ## Fase 13 — Observabilidade operacional
 

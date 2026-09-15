@@ -236,7 +236,89 @@ rodar/instalar.
 > registrado manualmente como serviço com `sc.exe create` ou executado como
 > console em desenvolvimento.
 
-## 8. Indo para produção/staging
+## 8. Deploy através do painel EasyPanel.io (sua VPS)
+
+> **Atenção com o nome:** este é o [EasyPanel.io](https://easypanel.io), o
+> painel self-hosted de deploy (estilo Coolify/CapRover) que já roda na sua
+> VPS — diferente do **produto** deste repositório, que também se chama
+> "EasyPanel" por coincidência de nome. Nesta seção, "o painel" sempre se
+> refere ao easypanel.io.
+
+O repositório já está preparado para isso: `deploy/docker-compose.easypanel.yml`
+é uma variação de `docker-compose.yml` **sem o serviço `caddy`** e **sem
+nenhuma porta publicada no host**. Isso é necessário porque o painel
+EasyPanel.io já roda seu próprio proxy reverso (Traefik) nas portas 80/443 do
+servidor — se o nosso Caddy tentasse publicar essas mesmas portas, o deploy
+falharia por conflito. O roteamento público (domínio, TLS, path) passa a ser
+configurado dentro do próprio painel, na aba **Domains** de cada serviço.
+
+### 8.1 Criar o serviço Compose no painel
+
+1. No painel, abra (ou crie) um **Project** para o EasyPanel (o produto).
+2. **New Service → Compose**.
+3. Em **Source**, escolha **Git** e preencha:
+   - **Repository:** `https://github.com/douglasoliveira21/easypanel.git`
+   - **Branch:** `main`
+   - **Build Path:** `/deploy`
+   - **Docker Compose File:** `docker-compose.easypanel.yml`
+
+   O repositório é público, então nenhuma chave de deploy é necessária.
+
+4. O painel deve detectar automaticamente `deploy/.env.example` e pré-popular
+   o editor de variáveis de ambiente. Preencha (mesmos valores explicados no
+   passo 2 deste tutorial):
+   - `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_ROOT_PASSWORD`
+   - `JWT_SIGNING_KEY` (≥ 32 bytes aleatórios)
+   - `BOOTSTRAP_SUPERADMIN_EMAIL` / `BOOTSTRAP_SUPERADMIN_PASSWORD`
+   - `GRAFANA_ADMIN_PASSWORD`
+   - **Não é preciso preencher** `SITE_ADDRESS`, `ACME_EMAIL`, `HTTP_PORT`,
+     `HTTPS_PORT` — esse arquivo não usa mais o Caddy; o painel cuida disso.
+
+5. Clique em **Deploy**. O painel executa `docker compose up --build -d`,
+   construindo as imagens `api` (a partir de `src/EasyPanel.Api/Dockerfile`)
+   e `frontend`, e subindo Postgres/Redis/MinIO/observabilidade junto.
+
+### 8.2 Expor a API e o frontend publicamente (Domains)
+
+Depois que os containers estiverem no ar, configure os **Domains** do
+serviço Compose (isso substitui o roteamento que o Caddyfile fazia):
+
+| Hostname | Path | Serviço interno | Porta |
+|----------|------|------------------|-------|
+| `seudominio.com` (ou subdomínio) | `/api` | `api` | `8080` |
+| `seudominio.com` (mesmo host) | `/health` | `api` | `8080` |
+| `seudominio.com` (mesmo host) | `/` (restante) | `frontend` | `80` |
+
+Isso reproduz exatamente o roteamento do `deploy/Caddyfile` original
+(`/api/*` e `/health/*` → backend, resto → frontend), mas via Traefik do
+painel. Se preferir simplicidade antes do frontend real existir, aponte só
+um Domain para `api:8080` e use a API diretamente.
+
+Opcional: adicione um Domain para o serviço `grafana` (porta `3000`) se
+quiser os dashboards acessíveis publicamente (proteja com Basic Auth, opção
+disponível na mesma aba do painel).
+
+### 8.3 Verificar e criar o primeiro tenant
+
+```bash
+curl https://seudominio.com/health/ready
+```
+
+Depois, repita exatamente o **passo 3** deste tutorial ("Primeiro acesso —
+criar o tenant e o primeiro Administrador"), trocando `http://localhost` pelo
+seu domínio. Para rodar o comando `psql` de inserção do Tenant, use o
+terminal integrado do painel no serviço `postgres` (ou `docker exec` via SSH
+na VPS) em vez de `docker compose exec` local.
+
+### 8.4 Deploy automático a cada push (liga com o CI já existente)
+
+O painel expõe uma **Deployment Trigger URL** por serviço. Cadastre-a como
+webhook no repositório GitHub (Settings → Webhooks) para que cada push na
+`main` — já validado pelo `backend-ci.yml` (ver seção 6) — dispare um novo
+deploy automaticamente no seu servidor. Isso fecha o ciclo: push → CI verde
+→ deploy real, sem passo manual.
+
+## 9. Indo para produção/staging (sem o painel, Docker Compose direto)
 
 O guia operacional completo (backup, observabilidade, CI/CD sugerido, pontos
 de escala) está em [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Resumo do

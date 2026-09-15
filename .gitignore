@@ -29,3 +29,6 @@ queue.db-wal
 ## Artefatos de publish (binários gerados, não versionados)
 publish/
 *.zip
+
+## Estado interno da sessão do Claude Code (não é código do projeto)
+.claude/
