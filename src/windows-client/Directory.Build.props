@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    Configuração compartilhada da solução-satélite do Agente Windows (Fase 2).
+    É independente do backend: consome apenas a API HTTP e tem versionamento e
+    distribuição próprios. Sobrescreve o Directory.Build.props raiz para usar o
+    TFM multi-plataforma (net10.0) nos projetos de núcleo/SNMP testáveis em
+    qualquer SO, mantendo as demais convenções (nullable, warnings-as-errors).
+
+    O host de serviço Windows usa net10.0-windows no seu próprio csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>

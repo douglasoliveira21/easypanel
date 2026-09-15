@@ -1,0 +1,54 @@
+# =============================================================================
+# EasyPanel — Override de PRODUCTION
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Produção: HTTPS automático via Caddy em domínio público, imagens fixadas por
+# tag imutável, políticas de restart e limites de recursos, sem exposição de
+# dependências ao host. Segredos exclusivamente via ambiente / cofre (R1.6).
+# =============================================================================
+
+services:
+  api:
+    image: easypanel/api:${API_IMAGE_TAG:?defina API_IMAGE_TAG para produção}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    restart: always
+    deploy:
+      replicas: ${API_REPLICAS:-2}
+      resources:
+        limits:
+          memory: 1g
+      restart_policy:
+        condition: any
+
+  caddy:
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      API_UPSTREAM: api:8080
+      FRONTEND_UPSTREAM: frontend:80
+      ACME_EMAIL: ${ACME_EMAIL}
+    restart: always
+
+  postgres:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  redis:
+    restart: always
+
+  minio:
+    restart: always
+
+  frontend:
+    image: easypanel/frontend:${FRONTEND_IMAGE_TAG:?defina FRONTEND_IMAGE_TAG para produção}
+    restart: always
+
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: https://${SITE_ADDRESS}/grafana/
+    restart: always

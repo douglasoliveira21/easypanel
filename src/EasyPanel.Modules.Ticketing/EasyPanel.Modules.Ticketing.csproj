@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Chamados/Helpdesk e SLA (Fase 6): abertura, ciclo de vida com
+    histórico somente-adição de interações, política de SLA por (tenant,
+    prioridade) e anexos. Expõe apenas contratos públicos (entidades, DTOs de
+    domínio, interfaces de serviço); regras/implementações vivem na
+    Infrastructure. Regra de dependência: Modules.Ticketing -> Shared.Kernel.
+    Não referencia Modules.Customers/Modules.Monitoring/Modules.Identity:
+    Cliente, Local, Impressora e usuário (Técnico) são referenciados apenas
+    por Guid (sem navegação entre módulos).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

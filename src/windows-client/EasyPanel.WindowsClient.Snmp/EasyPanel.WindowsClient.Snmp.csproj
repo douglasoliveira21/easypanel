@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Coleta SNMP e drivers por fabricante do Agente Windows (Fase 2 — R7/R8). O
+    núcleo é agnóstico de fabricante; cada driver interpreta OIDs específicos em
+    leituras normalizadas. Preparado para SNMP v3 por extensibilidade (só v1/v2c
+    implementados na Fase 2). Multi-plataforma (net10.0) para testabilidade.
+  -->
+  <PropertyGroup>
+    <RootNamespace>EasyPanel.WindowsClient.Snmp</RootNamespace>
+  </PropertyGroup>
+  <!--
+    Implementação real de SNMP v1/v2c por UDP (Fase 4), via biblioteca consolidada
+    em vez de codificar BER/ASN.1 do zero. Versão fixada (sem vulnerabilidade
+    conhecida na publicação desta fase; conferir com o comando de verificação de
+    vulnerabilidades do dotnet ao atualizar).
+  -->
+  <ItemGroup>
+    <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.7" />
+  </ItemGroup>
+
+</Project>

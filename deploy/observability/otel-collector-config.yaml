@@ -1,0 +1,43 @@
+# =============================================================================
+# OpenTelemetry Collector — configuração base (Fase 1: provisionamento)
+#
+# Recebe traces/metrics/logs via OTLP da API e encaminha para Prometheus
+# (métricas) e Loki (logs). A instrumentação funcional da aplicação é
+# configurada na tarefa 9.3; aqui estabelecemos a fundação da coleta.
+# =============================================================================
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  # Expõe métricas para o Prometheus fazer scrape.
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  # Encaminha logs para o Loki.
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/loki]

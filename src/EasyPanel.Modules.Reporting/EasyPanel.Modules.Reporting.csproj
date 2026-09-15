@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Relatórios e Dashboards (Fase 9): painel de visão geral e
+    relatórios agregados (consumo de impressão, faturamento, SLA) por
+    intervalo de datas. Diferente das fases anteriores, não persiste
+    nenhuma entidade nova — apenas DTOs de agregação e interfaces de
+    serviço; a leitura cruzada de outros módulos vive na Infrastructure.
+    Regra de dependência: Modules.Reporting -> Shared.Kernel. Não referencia
+    nenhum outro módulo de domínio.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

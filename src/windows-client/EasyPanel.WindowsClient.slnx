@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EasyPanel.WindowsClient.Snmp/EasyPanel.WindowsClient.Snmp.csproj" />
+  <Project Path="EasyPanel.WindowsClient.Tests/EasyPanel.WindowsClient.Tests.csproj" />
+  <Project Path="EasyPanel.WindowsClient/EasyPanel.WindowsClient.csproj" />
+</Solution>

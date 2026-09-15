@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Contratos (Fase 7): cadastro de contrato vinculado a Cliente,
+    escopo opcional por Local/Impressora, franquia por tipo de contador e
+    resolução do contrato aplicável a uma impressora numa data. Base para a
+    Fase 8 (Fechamento e Faturamento) — nenhum cálculo de consolidação de
+    contador nem geração de fatura acontece aqui. Expõe apenas contratos
+    públicos (entidades, DTOs de domínio, interfaces de serviço); regras/
+    implementações vivem na Infrastructure. Regra de dependência:
+    Modules.Contracts -> Shared.Kernel. Não referencia
+    Modules.Customers/Modules.Monitoring: Cliente, Local e Impressora são
+    referenciados apenas por Guid (sem navegação entre módulos).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

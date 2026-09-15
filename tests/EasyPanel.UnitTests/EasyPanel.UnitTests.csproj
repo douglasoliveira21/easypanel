@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!--
+      NU1903 é levantado por dependência transitiva do tooling de design do EF
+      Core, usada apenas em tempo de build (não redistribuída). Mantém-se o
+      audit ativo, mas sem falhar o build por conta de uma ferramenta de build.
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1902;NU1903</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Tenancy\EasyPanel.Modules.Tenancy.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Identity\EasyPanel.Modules.Identity.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Customers\EasyPanel.Modules.Customers.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Auditing\EasyPanel.Modules.Auditing.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Monitoring\EasyPanel.Modules.Monitoring.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Alerting\EasyPanel.Modules.Alerting.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Inventory\EasyPanel.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Infrastructure\EasyPanel.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Ticketing\EasyPanel.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Contracts\EasyPanel.Modules.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Billing\EasyPanel.Modules.Billing.csproj" />
+    <ProjectReference Include="..\..\src\EasyPanel.Modules.Reporting\EasyPanel.Modules.Reporting.csproj" />
+  </ItemGroup>
+
+</Project>

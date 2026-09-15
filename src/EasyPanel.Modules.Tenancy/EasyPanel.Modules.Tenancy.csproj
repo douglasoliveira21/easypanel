@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Referência ao framework compartilhado do ASP.NET Core para acesso aos tipos
+    de HttpContext/RequestDelegate/IApplicationBuilder usados pela resolução de
+    tenant no pipeline (TenantResolutionMiddleware). Mantém o projeto como uma
+    biblioteca de classes (não gera host próprio).
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Alertas e Notificações (Fase 3): regras de alerta, alertas, seu
+    ciclo de vida, silenciamento e histórico de notificação. Expõe apenas
+    contratos públicos (entidades, DTOs de domínio, interfaces de serviço);
+    regras/implementações (motor de avaliação, envio de notificação) vivem na
+    Infrastructure. Regra de dependência: Modules.Alerting -> Shared.Kernel.
+    Não referencia Modules.Monitoring: impressoras e agentes são referenciados
+    apenas por Guid (sem navegação entre módulos).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Host da Web API: Program.cs, controllers, middlewares, composição de DI.
+    Regra de dependência: Api -> Modules.* -> Shared.Kernel; referencia
+    Infrastructure apenas para composição de DI (implementações concretas).
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <!--
+      Validação de contratos de entrada da API (R12.2). Usamos apenas o pacote
+      núcleo (FluentValidation) com invocação explícita de IValidator<T> nos
+      controllers — em vez do antigo FluentValidation.AspNetCore (auto-validação),
+      cujas extensões de DI foram descontinuadas na linha 11/12. A abordagem
+      explícita é determinística, evita reflexão de model binding e mantém o
+      mapeamento de erros → HTTP 400 sob controle do controller.
+    -->
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+
+    <!--
+      Documentação da API (R45): Swagger/OpenAPI com esquema de segurança Bearer.
+    -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.1" />
+
+    <!--
+      Observabilidade (R11): logs estruturados em JSON via Serilog, enriquecidos
+      com CorrelationId/tenant_id e com redaction de segredos (R11.1–R11.3).
+    -->
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+
+    <!--
+      Observabilidade (R11): traces e métricas via OpenTelemetry, exportados para
+      o collector (OTLP). O endpoint do collector é configurável; na ausência de
+      um collector, a exportação simplesmente não entrega, sem afetar a aplicação.
+    -->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Tenancy\EasyPanel.Modules.Tenancy.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Identity\EasyPanel.Modules.Identity.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Customers\EasyPanel.Modules.Customers.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Auditing\EasyPanel.Modules.Auditing.csproj" />
+    <ProjectReference Include="..\EasyPanel.Infrastructure\EasyPanel.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

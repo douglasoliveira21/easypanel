@@ -1,0 +1,82 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Infrastructure implementa as abstrações do Kernel e dos Módulos
+    (DbContext, EF config, Redis, Serilog, migrations, storage).
+    Regra de dependência: Infrastructure -> Modules.* -> Shared.Kernel.
+  -->
+  <!--
+    Correção de segurança de dependência transitiva.
+
+    System.Security.Cryptography.Xml entra apenas de forma transitiva e em tempo
+    de build, via Microsoft.EntityFrameworkCore.Design -> Microsoft.Build.Tasks.Core
+    / Microsoft.CodeAnalysis.Workspaces.MSBuild. A versão resolvida (9.0.0) tem
+    vulnerabilidades de gravidade alta (DoS/bypass no EncryptedXml). A linha
+    10.0.x foi corrigida a partir da 10.0.10 (advisories afetam <= 10.0.9);
+    fixamos em 10.0.11 para alinhar ao runtime.
+
+    O pin fica apenas neste projeto (onde o EF Core Design puxa o pacote), e não
+    em Directory.Build.props, pois o projeto Web (EasyPanel.Api) já traz este
+    assembly pelo shared framework e uma referência explícita lá dispara NU1510.
+    PrivateAssets=all + ExcludeAssets=runtime garantem que o pin não adiciona a
+    dependência ao runtime da aplicação — apenas força a resolução transitiva
+    para uma versão sem vulnerabilidade conhecida.
+  -->
+  <!--
+    Minio: SDK oficial S3 compatible usado por MinioFileStorage (Fase 6, R5)
+    para anexos de Chamado. Versao mais recente sem vulnerabilidade conhecida
+    no momento da implementacao (verificado com dotnet list package
+    vulnerable, incluindo transitivas).
+  -->
+  <ItemGroup>
+    <PackageReference Include="Minio" Version="7.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Tenancy\EasyPanel.Modules.Tenancy.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Identity\EasyPanel.Modules.Identity.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Customers\EasyPanel.Modules.Customers.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Auditing\EasyPanel.Modules.Auditing.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Monitoring\EasyPanel.Modules.Monitoring.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Alerting\EasyPanel.Modules.Alerting.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Inventory\EasyPanel.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Ticketing\EasyPanel.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Contracts\EasyPanel.Modules.Contracts.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Billing\EasyPanel.Modules.Billing.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Reporting\EasyPanel.Modules.Reporting.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Portal\EasyPanel.Modules.Portal.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <!-- IdentityDbContext + AddEntityFrameworkStores para materializar as tabelas do Identity sobre PostgreSQL. -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+    <!--
+      Emissão/assinatura de JWT de acesso (R2.1, R2.6). JsonWebTokenHandler +
+      SymmetricSecurityKey (HMAC-SHA256). Linha 8.x atual do IdentityModel.
+    -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
+    <!--
+      Esquema de autenticação Bearer (R2.7): valida o JWT de acesso e rejeita
+      tokens expirados/ inválidos com HTTP 401. Fornece também os serviços de
+      autenticação exigidos pelo pipeline (UseAuthentication) e pela resolução de
+      tenant a partir do ClaimsPrincipal.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+  </ItemGroup>
+
+</Project>

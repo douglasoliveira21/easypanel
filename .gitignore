@@ -1,0 +1,31 @@
+## .NET build artifacts
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+
+## Test results
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+coverage/
+
+## Rider / VS
+.idea/
+
+## Ambiente / segredos
+.env
+*.env.local
+appsettings.*.local.json
+
+## Agente Windows — fila local SQLite (artefato de runtime)
+queue.db
+queue.db-shm
+queue.db-wal
+
+## Artefatos de publish (binários gerados, não versionados)
+publish/
+*.zip

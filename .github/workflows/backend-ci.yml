@@ -1,0 +1,50 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "src/windows-client/**"
+      - "**.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "src/windows-client/**"
+      - "**.md"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore EasyPanel.sln
+
+      - name: Build (zero warnings)
+        run: dotnet build EasyPanel.sln --configuration Release --no-restore
+
+      - name: Test (unit + integration + security)
+        run: dotnet test EasyPanel.sln --configuration Release --no-build --logger "console;verbosity=normal"
+
+      - name: Check for pending EF Core model changes
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes \
+            --project src/EasyPanel.Infrastructure \
+            --startup-project src/EasyPanel.Infrastructure
+
+      - name: Check for known vulnerable dependencies
+        run: |
+          dotnet list EasyPanel.sln package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+          if grep -qi "has the following vulnerable packages" vulnerable.txt; then
+            echo "::error::Vulnerable dependencies found — pin to a fixed version."
+            exit 1
+          fi

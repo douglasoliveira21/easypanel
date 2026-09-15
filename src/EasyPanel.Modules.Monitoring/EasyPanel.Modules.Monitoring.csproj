@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Monitoramento (Fase 2): entidades e contratos de Windows Client,
+    Impressoras, Contadores, Eventos, Coletas e Movimentação. Expõe apenas
+    contratos públicos (entidades, DTOs de domínio, interfaces de serviço e a
+    abstração IPrinterDriver); regras/implementações vivem na Infrastructure.
+    Regra de dependência: Modules.Monitoring -> Shared.Kernel.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,47 @@
+# =============================================================================
+# EasyPanel — Caddyfile (reverse proxy)  — Requisito R1.7
+#
+# O Caddy termina TLS e roteia:
+#   - /api/*  -> backend (EasyPanel.Api)
+#   - restante -> frontend (build estático React)
+#
+# HTTPS automático em staging/produção quando SITE_ADDRESS é um domínio público.
+# Em development, SITE_ADDRESS costuma ser ":80" ou "localhost" (sem TLS).
+#
+# Variáveis de ambiente (injetadas pelo docker-compose):
+#   SITE_ADDRESS      endereço/domínio servido (ex.: easypanel.example.com)
+#   API_UPSTREAM      host:porta do backend (ex.: api:8080)
+#   FRONTEND_UPSTREAM host:porta do frontend (ex.: frontend:80)
+# =============================================================================
+
+{
+	# Endereço de e-mail para ACME (Let's Encrypt) em staging/prod.
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$SITE_ADDRESS} {
+	# Encaminha as chamadas de API para o backend, preservando o prefixo /api.
+	handle /api/* {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Forwarded-Host {host}
+		}
+	}
+
+	# Health checks do backend também roteados para a API.
+	handle /health/* {
+		reverse_proxy {$API_UPSTREAM}
+	}
+
+	# Todo o restante é servido pelo frontend (SPA).
+	handle {
+		reverse_proxy {$FRONTEND_UPSTREAM}
+	}
+
+	encode gzip zstd
+
+	log {
+		output stdout
+		format json
+	}
+}

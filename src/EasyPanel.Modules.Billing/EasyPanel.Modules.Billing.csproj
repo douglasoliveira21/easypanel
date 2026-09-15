@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Fechamento e Faturamento (Fase 8): fechamento mensal que
+    consolida consumo de contadores por impressora, resolve o contrato
+    aplicável e gera faturas com itens de excedente. Expõe apenas contratos
+    públicos (entidades, DTOs de domínio, interfaces de serviço); regras/
+    implementações vivem na Infrastructure. Regra de dependência:
+    Modules.Billing -> Shared.Kernel. Não referencia
+    Modules.Monitoring/Modules.Contracts: Impressora e Contrato são
+    referenciados apenas por Guid (sem navegação entre módulos).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

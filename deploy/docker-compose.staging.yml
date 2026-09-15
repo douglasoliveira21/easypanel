@@ -1,0 +1,38 @@
+# =============================================================================
+# EasyPanel — Override de STAGING
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# Ambiente próximo à produção: HTTPS automático via Caddy (SITE_ADDRESS deve ser
+# um domínio público resolvível), dependências NÃO expostas ao host, imagens
+# fixadas por tag. Segredos vêm exclusivamente do .env / ambiente (R1.6).
+# =============================================================================
+
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  caddy:
+    environment:
+      # Domínio público para emissão automática de certificado TLS.
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      API_UPSTREAM: api:8080
+      FRONTEND_UPSTREAM: frontend:80
+      ACME_EMAIL: ${ACME_EMAIL}
+
+  # Em staging as dependências permanecem internas (sem publicar portas ao host).
+  postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: https://${SITE_ADDRESS}/grafana/

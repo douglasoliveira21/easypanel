@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de Estoque (Fase 5): catálogo de itens, movimentação somente-adição
+    (Entrada/Saída/Ajuste), saldo materializado por (Item, Local) e estoque
+    mínimo. Expõe apenas contratos públicos (entidades, DTOs de domínio,
+    interfaces de serviço); regras/implementações vivem na Infrastructure.
+    Regra de dependência: Modules.Inventory -> Shared.Kernel. Não referencia
+    Modules.Customers/Modules.Monitoring: Local e Impressora são referenciados
+    apenas por Guid (sem navegação entre módulos).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

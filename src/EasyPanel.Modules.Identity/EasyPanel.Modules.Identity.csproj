@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Referência ao módulo de Tenancy para reutilizar TenancyConstants.SuperAdminRole
+    (nome canônico do papel Super Admin). O nome deve permanecer idêntico ao usado
+    pela resolução de tenant (IsInRole("Super Admin")). A dependência é acíclica:
+    Tenancy referencia apenas o Shared.Kernel e não conhece o Identity.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\EasyPanel.Modules.Tenancy\EasyPanel.Modules.Tenancy.csproj" />
+  </ItemGroup>
+
+  <!--
+    ApplicationUser/ApplicationRole derivam de IdentityUser<Guid>/IdentityRole<Guid>.
+    Microsoft.Extensions.Identity.Stores traz os tipos base do Identity (core) sem
+    acoplar o módulo ao ASP.NET Core Web ou ao EF Core — o EntityFrameworkStores
+    fica no Infrastructure, que possui o DbContext.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0" />
+    <!--
+      Primitivas de autorização usadas pelos contratos de RBAC deste módulo
+      (tarefa 4.2): AuthorizeAttribute (base de RequirePermissionAttribute) e
+      IAuthorizationRequirement (PermissionRequirement). O handler concreto, o
+      policy provider dinâmico e o resolver ficam na Infrastructure. O pacote
+      Microsoft.AspNetCore.Authorization contém apenas as abstrações de
+      autorização (sem acoplar o módulo ao host Web/MVC).
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

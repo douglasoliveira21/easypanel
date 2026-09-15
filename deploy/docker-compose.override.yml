@@ -1,0 +1,43 @@
+# =============================================================================
+# EasyPanel — Override de DEVELOPMENT
+#
+# Aplicado automaticamente pelo Docker Compose junto com docker-compose.yml.
+# Objetivos do ambiente de desenvolvimento:
+#   - Expor portas das dependências para acesso local/depuração.
+#   - Rodar a API em ambiente Development (Swagger habilitado).
+#   - Servir por HTTP em localhost (sem TLS).
+# =============================================================================
+
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "8080:8080"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  minio:
+    ports:
+      - "9000:9000" # API S3
+      - "9001:9001" # Console
+
+  caddy:
+    environment:
+      SITE_ADDRESS: ":80"
+      API_UPSTREAM: api:8080
+      FRONTEND_UPSTREAM: frontend:80
+
+  grafana:
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    ports:
+      - "9090:9090"

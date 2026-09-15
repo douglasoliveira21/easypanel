@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
+    <!--
+      Provider relacional SQLite in-memory usado apenas nos testes de isolamento
+      multi-tenant, para exercitar query filters e o interceptor de SaveChanges
+      de ponta a ponta sem depender de PostgreSQL/Docker (R6.4–R6.6). Não é
+      referenciado por nenhum projeto de produção.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <!--
+      Correção de segurança de dependência transitiva de teste.
+
+      Microsoft.EntityFrameworkCore.Sqlite 10.0.0 traz SQLitePCLRaw 2.1.11, que
+      empacota uma versão nativa do SQLite afetada por CVE-2025-6965 (corrupção
+      de memória; corrigido no SQLite >= 3.50.2 / GHSA-2m69-gcr7-jv3q). Fixamos
+      a linha 2.1.13 (última 2.1.x) do bundle e do lib nativo para resolver a
+      dependência para uma versão sem vulnerabilidade conhecida. Restrito ao
+      projeto de testes; nada disso é redistribuído em produção.
+    -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EasyPanel.Api\EasyPanel.Api.csproj" />
+  </ItemGroup>
+
+</Project>

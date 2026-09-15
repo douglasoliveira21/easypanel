@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo do Portal do Cliente (Fase 10): leitura somente-consulta de
+    parque/contadores, chamados e faturas do Cliente vinculado ao usuário
+    autenticado. Como a Fase 9, não persiste nenhuma entidade nova — apenas
+    DTOs e interfaces de serviço; a leitura cruzada de outros módulos vive na
+    Infrastructure. Regra de dependência: Modules.Portal -> Shared.Kernel. Não
+    referencia nenhum outro módulo de domínio.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\EasyPanel.Shared.Kernel\EasyPanel.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>
