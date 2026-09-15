@@ -2,8 +2,9 @@
 
 > **Deploy via painel EasyPanel.io (self-hosted, numa VPS):** ver
 > [TUTORIAL.md](../TUTORIAL.md), seção 8 — usa
-> `deploy/docker-compose.easypanel.yml` (sem Caddy; o painel roda seu próprio
-> proxy reverso) e é o caminho recomendado quando a VPS já tem o painel
+> `deploy/easypanel/docker-compose.yml` (sem Caddy nem MinIO — o painel roda
+> seu próprio proxy reverso e o storage usa o provedor `Local`, um volume
+> persistente) e é o caminho recomendado quando a VPS já tem o painel
 > instalado. Esta página (`docs/DEPLOYMENT.md`) documenta o caminho genérico
 > com Docker Compose + Caddy próprio, para quem não usa esse painel.
 

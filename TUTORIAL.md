@@ -244,13 +244,28 @@ rodar/instalar.
 > "EasyPanel" por coincidência de nome. Nesta seção, "o painel" sempre se
 > refere ao easypanel.io.
 
-O repositório já está preparado para isso: `deploy/docker-compose.easypanel.yml`
-é uma variação de `docker-compose.yml` **sem o serviço `caddy`** e **sem
-nenhuma porta publicada no host**. Isso é necessário porque o painel
-EasyPanel.io já roda seu próprio proxy reverso (Traefik) nas portas 80/443 do
-servidor — se o nosso Caddy tentasse publicar essas mesmas portas, o deploy
-falharia por conflito. O roteamento público (domínio, TLS, path) passa a ser
-configurado dentro do próprio painel, na aba **Domains** de cada serviço.
+O repositório já está preparado para isso em `deploy/easypanel/` (um
+diretório próprio, isolado dos outros arquivos de `deploy/`):
+
+- `docker-compose.yml` — variação do compose principal **sem o serviço
+  `caddy`** e **sem nenhuma porta publicada no host**. Necessário porque o
+  painel EasyPanel.io já roda seu próprio proxy reverso (Traefik) nas portas
+  80/443 do servidor — se o nosso Caddy tentasse publicar essas mesmas
+  portas, o deploy falharia por conflito. O roteamento público (domínio,
+  TLS, path) passa a ser configurado dentro do próprio painel, na aba
+  **Domains** de cada serviço.
+- **Sem MinIO.** Em vez de rodar um serviço S3 à parte, a API usa o
+  provedor de storage `Local` (`Storage__Provider=Local`), gravando os
+  anexos num volume Docker persistente (`storage-data`) — o "armazenamento
+  interno" da própria VPS/painel, sem depender de um bucket S3 externo.
+- Ficar num diretório próprio (`/deploy/easypanel`, sem nenhum
+  `docker-compose.override.yml` ao lado) evita um problema real: o painel
+  mescla automaticamente qualquer `docker-compose.override.yml` que
+  encontrar no Build Path, e o override de desenvolvimento
+  (`deploy/docker-compose.override.yml`) não é compatível com este arquivo
+  (publica portas e referencia o serviço `caddy`, que não existe aqui) — é
+  exatamente isso que causava o erro `Interrupted`/conflito de imagem em
+  tentativas anteriores.
 
 ### 8.1 Criar o serviço Compose no painel
 
@@ -259,24 +274,25 @@ configurado dentro do próprio painel, na aba **Domains** de cada serviço.
 3. Em **Source**, escolha **Git** e preencha:
    - **Repository:** `https://github.com/douglasoliveira21/easypanel.git`
    - **Branch:** `main`
-   - **Build Path:** `/deploy`
-   - **Docker Compose File:** `docker-compose.easypanel.yml`
+   - **Build Path:** `/deploy/easypanel`
+   - **Docker Compose File:** `docker-compose.yml`
 
    O repositório é público, então nenhuma chave de deploy é necessária.
 
-4. O painel deve detectar automaticamente `deploy/.env.example` e pré-popular
-   o editor de variáveis de ambiente. Preencha (mesmos valores explicados no
-   passo 2 deste tutorial):
-   - `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_ROOT_PASSWORD`
+4. O painel deve detectar automaticamente `deploy/easypanel/.env.example` e
+   pré-popular o editor de variáveis de ambiente. Preencha:
+   - `POSTGRES_PASSWORD`, `REDIS_PASSWORD`
    - `JWT_SIGNING_KEY` (≥ 32 bytes aleatórios)
    - `BOOTSTRAP_SUPERADMIN_EMAIL` / `BOOTSTRAP_SUPERADMIN_PASSWORD`
    - `GRAFANA_ADMIN_PASSWORD`
-   - **Não é preciso preencher** `SITE_ADDRESS`, `ACME_EMAIL`, `HTTP_PORT`,
-     `HTTPS_PORT` — esse arquivo não usa mais o Caddy; o painel cuida disso.
+   - **Não existem** `MINIO_*`, `SITE_ADDRESS`, `ACME_EMAIL`, `HTTP_PORT`,
+     `HTTPS_PORT` neste arquivo — nem MinIO nem Caddy são usados nesta
+     variante.
 
 5. Clique em **Deploy**. O painel executa `docker compose up --build -d`,
    construindo as imagens `api` (a partir de `src/EasyPanel.Api/Dockerfile`)
-   e `frontend`, e subindo Postgres/Redis/MinIO/observabilidade junto.
+   e `frontend`, e subindo Postgres/Redis/observabilidade junto — os anexos
+   ficam no volume `storage-data`, gerenciado pelo próprio painel.
 
 ### 8.2 Expor a API e o frontend publicamente (Domains)
 

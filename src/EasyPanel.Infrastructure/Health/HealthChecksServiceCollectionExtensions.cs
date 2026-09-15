@@ -52,12 +52,12 @@ public static class HealthChecksServiceCollectionExtensions
             .AddOptions<StorageOptions>()
             .Bind(configuration.GetSection(StorageOptions.SectionName));
 
-        // HttpClient nomeado usado pelo StorageHealthCheck.
+        // HttpClient nomeado usado pelo StorageHealthCheck (provedor Minio).
         services.AddHttpClient(StorageHealthCheck.HttpClientName);
 
         string[] readyTags = [ReadyTag];
 
-        services
+        var healthChecksBuilder = services
             .AddHealthChecks()
             // PostgreSQL: usa o AppDbContext (Npgsql) para validar conectividade.
             .AddDbContextCheck<AppDbContext>(
@@ -66,11 +66,21 @@ public static class HealthChecksServiceCollectionExtensions
             // Redis: conexão + PING.
             .AddCheck<RedisHealthCheck>(
                 name: RedisCheckName,
-                tags: readyTags)
-            // Storage S3/MinIO: sondagem HTTP de liveness.
-            .AddCheck<StorageHealthCheck>(
-                name: StorageCheckName,
                 tags: readyTags);
+
+        // Storage: o provedor decide o check (Minio -> sondagem HTTP de
+        // liveness; Local -> escrita/remoção de sondagem no diretório base).
+        // Lido diretamente da configuração (não via DI) porque o provedor
+        // precisa ser conhecido no momento do registro dos health checks.
+        var storageProvider = configuration[$"{StorageOptions.SectionName}:{nameof(StorageOptions.Provider)}"];
+        if (string.Equals(storageProvider, StorageOptions.ProviderLocal, StringComparison.OrdinalIgnoreCase))
+        {
+            healthChecksBuilder.AddCheck<LocalStorageHealthCheck>(name: StorageCheckName, tags: readyTags);
+        }
+        else
+        {
+            healthChecksBuilder.AddCheck<StorageHealthCheck>(name: StorageCheckName, tags: readyTags);
+        }
 
         return services;
     }

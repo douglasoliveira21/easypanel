@@ -1,3 +1,4 @@
+using EasyPanel.Infrastructure.Health;
 using EasyPanel.Infrastructure.Storage;
 using EasyPanel.Modules.Ticketing;
 using EasyPanel.Shared.Kernel.Storage;
@@ -12,10 +13,11 @@ namespace EasyPanel.Infrastructure.Ticketing;
 /// <see cref="ITicketService"/>, <see cref="ISlaPolicyService"/> e
 /// <see cref="ITicketAttachmentService"/>, todos <c>scoped</c> (dependem do
 /// <c>AppDbContext</c> e do <see cref="EasyPanel.Modules.Identity.ICurrentUserAccessor"/>,
-/// ambos scoped). <see cref="IFileStorage"/> (via <see cref="MinioFileStorage"/>)
-/// é registrado como singleton (cliente MinIO reutilizável, mesmo padrão de
-/// <c>HttpClient</c>). Pressupõe que a persistência (<c>AddPersistence</c>) já
-/// esteja registrada.
+/// ambos scoped). <see cref="IFileStorage"/> é registrado como singleton
+/// (cliente/handle reutilizável, mesmo padrão de <c>HttpClient</c>); a
+/// implementação depende de <c>Storage:Provider</c> (<see cref="MinioFileStorage"/>,
+/// padrão, ou <see cref="LocalFileStorage"/> — disco local). Pressupõe que a
+/// persistência (<c>AddPersistence</c>) já esteja registrada.
 /// </summary>
 public static class TicketingServiceCollectionExtensions
 {
@@ -29,7 +31,18 @@ public static class TicketingServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
 
-        services.AddSingleton<IFileStorage, MinioFileStorage>();
+        // Provedor de storage: lido diretamente da configuração (não via DI)
+        // porque a escolha da implementação precisa ser conhecida no momento
+        // do registro, antes do container resolver IOptions<StorageOptions>.
+        var storageProvider = configuration[$"{StorageOptions.SectionName}:{nameof(StorageOptions.Provider)}"];
+        if (string.Equals(storageProvider, StorageOptions.ProviderLocal, StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IFileStorage, LocalFileStorage>();
+        }
+        else
+        {
+            services.AddSingleton<IFileStorage, MinioFileStorage>();
+        }
 
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ISlaPolicyService, SlaPolicyService>();

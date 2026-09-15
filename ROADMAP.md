@@ -59,11 +59,16 @@ Redis, MinIO) funciona fora do papel.
 
 **Status parcial já entregue** (fora do fluxo gated, a pedido do usuário):
 deploy através do painel self-hosted **EasyPanel.io**, já instalado na VPS
-do usuário. `deploy/docker-compose.easypanel.yml` (variação de
-`docker-compose.yml` sem `caddy` e sem portas publicadas — o painel já roda
-seu próprio Traefik em 80/443) e o passo a passo completo em
-[TUTORIAL.md](TUTORIAL.md), seção 8. **Falta:** confirmar o deploy real feito
-pelo usuário no painel (não executado por esta sessão — sem acesso à VPS) e
+do usuário. `deploy/easypanel/docker-compose.yml` (diretório próprio, sem
+`caddy` — o painel já roda seu próprio Traefik em 80/443 — e sem `minio` —
+o provedor de storage `Local`/`LocalFileStorage`, novo nesta iteração, grava
+num volume persistente gerenciado pelo painel em vez de um bucket S3) e o
+passo a passo completo em [TUTORIAL.md](TUTORIAL.md), seção 8. Corrigido
+depois de uma primeira tentativa real de deploy falhar por dois motivos:
+`docker-compose.override.yml` (de desenvolvimento) sendo mesclado
+automaticamente pelo painel por estar no mesmo diretório do Build Path, e a
+imagem `minio/minio:latest` não ser mais pública no Docker Hub. **Falta:**
+confirmar que o novo deploy funciona de ponta a ponta na VPS do usuário e
 formalizar o webhook de auto-deploy a cada push.
 
 **Escopo restante:**

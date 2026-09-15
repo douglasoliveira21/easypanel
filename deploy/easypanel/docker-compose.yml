@@ -2,18 +2,27 @@
 # EasyPanel (SaaS) — Docker Compose para deploy através do painel EasyPanel.io
 # (o painel self-hosted, não confundir com o nome do produto)
 #
-# Diferença em relação a docker-compose.yml: SEM o serviço `caddy` e SEM
-# nenhuma porta publicada no host. O painel EasyPanel.io já roda seu próprio
-# proxy reverso (Traefik) nas portas 80/443 do servidor — publicar essas
-# portas aqui causaria conflito. TLS/domínio/roteamento são configurados
-# depois do deploy, na aba "Domains" de cada serviço dentro do painel (ver
-# TUTORIAL.md, seção "Deploy via painel EasyPanel.io").
+# Diferenças em relação a deploy/docker-compose.yml:
+#   - SEM o serviço `caddy` e SEM nenhuma porta publicada no host — o painel
+#     EasyPanel.io já roda seu próprio proxy reverso (Traefik) nas portas
+#     80/443 do servidor; publicar essas portas aqui causaria conflito.
+#     TLS/domínio/roteamento são configurados depois do deploy, na aba
+#     "Domains" de cada serviço dentro do painel (ver TUTORIAL.md, seção 8).
+#   - SEM o serviço `minio` — usa o provedor de storage `Local` (disco),
+#     gravando num volume persistente gerenciado pelo próprio painel, em vez
+#     de rodar um serviço S3 à parte.
+#   - Vive no seu PRÓPRIO diretório (deploy/easypanel/), sem nenhum
+#     docker-compose.override.yml ao lado — o painel mescla automaticamente
+#     qualquer override.yml encontrado no Build Path, e o override de
+#     desenvolvimento (deploy/docker-compose.override.yml) não é compatível
+#     com este arquivo (publica portas e referencia o serviço `caddy`, que
+#     não existe aqui).
 #
 # Uso no painel: New Service → Compose → Source: Git
-#   Repository:  https://github.com/douglasoliveira21/easypanel.git
-#   Branch:      main
-#   Build Path:  /deploy
-#   Compose File: docker-compose.easypanel.yml
+#   Repository:   https://github.com/douglasoliveira21/easypanel.git
+#   Branch:       main
+#   Build Path:   /deploy/easypanel
+#   Compose File: docker-compose.yml
 #
 # Segredos NUNCA são versionados: vêm do editor de variáveis de ambiente do
 # painel (que pré-popula a partir de .env.example, presente neste diretório).
@@ -25,7 +34,7 @@ services:
   # ---- Backend (.NET 10 / ASP.NET Core Web API) -----------------------------
   api:
     build:
-      context: ..
+      context: ../..
       dockerfile: src/EasyPanel.Api/Dockerfile
     image: easypanel/api:${API_IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -34,18 +43,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:8080
       Database__ConnectionString: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-easypanel};Username=${POSTGRES_USER:-easypanel};Password=${POSTGRES_PASSWORD}"
       Database__ApplyMigrationsOnStartup: "true"
       Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD}"
-      Storage__Endpoint: "http://minio:9000"
-      Storage__AccessKey: ${MINIO_ROOT_USER:-easypanel}
-      Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
-      Storage__Bucket: ${MINIO_BUCKET:-easypanel}
+      # Storage: provedor Local (disco), sem MinIO — grava no volume
+      # `storage-data`, montado abaixo em /data/storage.
+      Storage__Provider: Local
+      Storage__LocalBasePath: /data/storage
       Jwt__Issuer: ${JWT_ISSUER:-easypanel}
       Jwt__Audience: ${JWT_AUDIENCE:-easypanel}
       Jwt__SigningKey: ${JWT_SIGNING_KEY}
@@ -55,6 +62,10 @@ services:
       Bootstrap__SuperAdminPassword: ${BOOTSTRAP_SUPERADMIN_PASSWORD:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: easypanel-api
+    volumes:
+      # Volume persistente do storage local — NUNCA usar uma camada efêmera
+      # do container aqui, ou anexos são perdidos a cada deploy.
+      - storage-data:/data/storage
     # Sem `ports:` — o painel EasyPanel.io expõe este container publicamente
     # apontando um Domain para o serviço `api`, porta 8080 (ver TUTORIAL.md).
     expose:
@@ -100,29 +111,10 @@ services:
     networks:
       - backend
 
-  # ---- MinIO (armazenamento compatível com S3) -------------------------------
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: ["server", "/data", "--console-address", ":9001"]
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-easypanel}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    networks:
-      - backend
-
   # ---- Frontend (build estático React servido por Nginx) ---------------------
   frontend:
     build:
-      context: ../frontend
+      context: ../../frontend
       dockerfile: Dockerfile
     image: easypanel/frontend:${FRONTEND_IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -139,7 +131,7 @@ services:
     restart: unless-stopped
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
-      - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - ../observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     expose:
       - "4317"
       - "4318"
@@ -151,7 +143,7 @@ services:
     image: prom/prometheus:latest
     restart: unless-stopped
     volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     expose:
       - "9090"
@@ -164,7 +156,7 @@ services:
     restart: unless-stopped
     command: ["-config.file=/etc/loki/loki-config.yaml"]
     volumes:
-      - ./observability/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ../observability/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki-data:/loki
     expose:
       - "3100"
@@ -200,7 +192,7 @@ networks:
 volumes:
   postgres-data:
   redis-data:
-  minio-data:
+  storage-data:
   prometheus-data:
   loki-data:
   grafana-data:
